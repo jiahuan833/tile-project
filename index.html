@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瓷砖销售 - 管理系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+        }
+        .sidebar button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+        }
+        .sidebar button:hover {
+            background-color: #005bb5;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .search-box, .upload-section, .form-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-direction: column;
+        }
+        input, button {
+            padding: 8px;
+            font-size: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .hidden {
+            display: none;
+        }
+        #homeSection h1 {
+            font-size: 48px;
+            color: #0066cc;
+            text-align: center;
+            margin-top: 20%;
+        }
+        .maintenance-options button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        .maintenance-options button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧功能按钮 -->
+    <div class="sidebar">
+        <button onclick="showSection('home')">首页</button>
+        <button onclick="showSection('search')">搜索门店</button>
+        <button onclick="showSection('maintenance')">后台维护</button>
+    </div>
+
+    <!-- 右侧内容区域 -->
+    <div class="content">
+        <!-- 首页 -->
+        <div id="homeSection">
+            <h1>OWS TILES</h1>
+        </div>
+
+        <!-- 搜索门店功能 -->
+        <div id="searchSection" class="hidden">
+            <h2>门店搜索</h2>
+            <div class="search-box">
+                <input type="text" id="storeSearch" placeholder="输入门店名称模糊搜索..." oninput="searchStore()">
+            </div>
+            <div id="storeInfo">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>门店名称</th>
+                            <th>区域</th>
+                            <th>地址</th>
+                            <th>销售人员</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="storeTableBody">
+                        <!-- 动态填充门店信息 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 后台维护功能 -->
+        <div id="maintenanceSection" class="hidden">
+            <h2>后台维护</h2>
+            <div class="maintenance-options">
+                <button onclick="showMaintenanceSubSection('upload')">上传门店数据</button>
+                <button onclick="showMaintenanceSubSection('addStore')">新增门店</button>
+                <button onclick="showMaintenanceSubSection('tileMaintenance')">维护瓷砖资料</button>
+            </div>
+
+            <!-- 上传门店数据 -->
+            <div id="uploadSubSection" class="upload-section">
+                <input type="file" id="excelUpload" accept=".xlsx, .xls">
+                <button onclick="uploadExcel()">上传</button>
+                <p>说明：请上传包含门店名称、区域、地址、负责人、销售人员、销售金额的 Excel 文件。</p>
+            </div>
+
+            <!-- 新增门店 -->
+            <div id="addStoreSubSection" class="form-section hidden">
+                <input type="text" id="newStoreName" placeholder="门店名称">
+                <input type="text" id="newStoreRegion" placeholder="区域">
+                <input type="text" id="newStoreAddress" placeholder="地址">
+                <input type="text" id="newStoreManager" placeholder="负责人">
+                <input type="text" id="newStoreSalesman" placeholder="销售人员">
+                <input type="number" id="newStoreSalesAmount" placeholder="销售金额">
+                <button onclick="addNewStore()">保存</button>
+            </div>
+
+            <!-- 维护瓷砖资料 -->
+            <div id="tileMaintenanceSubSection" class="upload-section hidden">
+                <input type="file" id="tileExcelUpload" accept=".xlsx, .xls">
+                <button onclick="uploadTileExcel()">上传瓷砖资料</button>
+                <p>说明：请上传包含 SIZE (MM)、ITEM CODE、ITEM NAME、DESCRIPTION、Loose Price、Pallet Price、Bulk Price 的 Excel 文件。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 SheetJS 库用于解析 Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // 初始门店数据
+        let stores = JSON.parse(localStorage.getItem("stores")) || [
+            { id: 1, name: "瓷砖之家", region: "北京朝阳", address: "北京市朝阳区XX路", manager: "张三", salesman: "王五", salesAmount: 5000, salesHistory: [5000, 4500, 4000] },
+            { id: 2, name: "美瓷店", region: "上海浦东", address: "上海市浦东新区YY街", manager: "李四", salesman: "", salesAmount: 3000, salesHistory: [3000, 2500, 2000] }
+        ];
+
+        // 初始瓷砖数据
+        let tiles = JSON.parse(localStorage.getItem("tiles")) || [
+            { size: "75x300", itemCode: "WT30701", itemName: "Subway Flat Gloss White", description: "75x300mm", loosePrice: 18.50, palletPrice: 17.50, bulkPrice: 16.50 },
+            { size: "75x300", itemCode: "WT30702", itemName: "Subway Flat Matt White", description: "75x300mm", loosePrice: 18.50, palletPrice: 17.50, bulkPrice: 16.50 }
+        ];
+
+        // 上传门店 Excel 文件并解析
+        function uploadExcel() {
+            const fileInput = document.getElementById("excelUpload");
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("请先选择一个 Excel 文件！");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: "array" });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                stores = jsonData.map((row, index) => ({
+                    id: index + 1,
+                    name: row["门店名称"],
+                    region: row["区域"],
+                    address: row["地址"],
+                    manager: row["负责人"],
+                    salesman: row["销售人员"] || "", // 确保为空时是空字符串
+                    salesAmount: row["销售金额"] || 0,
+                    salesHistory: [row["销售金额"] || 0, 0, 0], // 初始化为单一金额
+                    tiles: [],
+                    followUps: [],
+                    pending: []
+                }));
+
+                localStorage.setItem("stores", JSON.stringify(stores));
+                alert("Excel 数据上传成功！共加载 " + stores.length + " 条门店数据。");
+                searchStore();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 上传瓷砖 Excel 文件并解析
+        function uploadTileExcel() {
+            const fileInput = document.getElementById("tileExcelUpload");
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("请先选择一个 Excel 文件！");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: "array" });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                tiles = jsonData.map(row => ({
+                    size: row["SIZE (MM)"],
+                    itemCode: row["ITEM CODE"],
+                    itemName: row["ITEM NAME"],
+                    description: row["DESCRIPTION"],
+                    loosePrice: parseFloat(row["Loose Price"]) || 0,
+                    palletPrice: parseFloat(row["Pallet Price"]) || 0,
+                    bulkPrice: parseFloat(row["Bulk Price"]) || 0
+                }));
+
+                localStorage.setItem("tiles", JSON.stringify(tiles));
+                alert("瓷砖资料上传成功！共加载 " + tiles.length + " 条瓷砖数据。");
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 新增门店
+        function addNewStore() {
+            const name = document.getElementById("newStoreName").value.trim();
+            const region = document.getElementById("newStoreRegion").value.trim();
+            const address = document.getElementById("newStoreAddress").value.trim();
+            const manager = document.getElementById("newStoreManager").value.trim();
+            const salesman = document.getElementById("newStoreSalesman").value.trim();
+            const salesAmount = parseInt(document.getElementById("newStoreSalesAmount").value) || 0;
+
+            if (!name || !region || !address || !manager) {
+                alert("请填写门店名称、区域、地址和负责人！");
+                return;
+            }
+
+            const newStore = {
+                id: stores.length + 1,
+                name,
+                region,
+                address,
+                manager,
+                salesman: salesman || "", // 允许销售人员为空
+                salesAmount,
+                salesHistory: [salesAmount, 0, 0],
+                tiles: [],
+                followUps: [],
+                pending: []
+            };
+
+            stores.push(newStore);
+            localStorage.setItem("stores", JSON.stringify(stores));
+            alert("门店新增成功！");
+            
+            document.getElementById("newStoreName").value = "";
+            document.getElementById("newStoreRegion").value = "";
+            document.getElementById("newStoreAddress").value = "";
+            document.getElementById("newStoreManager").value = "";
+            document.getElementById("newStoreSalesman").value = "";
+            document.getElementById("newStoreSalesAmount").value = "";
+            
+            searchStore();
+        }
+
+        // 模糊搜索门店
+        function searchStore() {
+            const query = document.getElementById("storeSearch").value.trim().toLowerCase();
+            const results = stores.filter(store => 
+                store.name.toLowerCase().includes(query) ||
+                store.region.toLowerCase().includes(query)
+            );
+            const tbody = document.getElementById("storeTableBody");
+            tbody.innerHTML = "";
+            if (results.length > 0) {
+                results.forEach(store => {
+                    const row = `<tr>
+                        <td>${store.name}</td>
+                        <td>${store.region}</td>
+                        <td>${store.address}</td>
+                        <td>${store.salesman || ""}</td>
+                        <td><a href="store-detail.html?id=${store.id}" target="_blank">查看详情</a></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } else {
+                tbody.innerHTML = "<tr><td colspan='5'>未找到门店</td></tr>";
+            }
+        }
+
+        // 显示主功能区域
+        function showSection(section) {
+            const homeSection = document.getElementById("homeSection");
+            const searchSection = document.getElementById("searchSection");
+            const maintenanceSection = document.getElementById("maintenanceSection");
+            
+            if (section === "home") {
+                homeSection.classList.remove("hidden");
+                searchSection.classList.add("hidden");
+                maintenanceSection.classList.add("hidden");
+            } else if (section === "search") {
+                homeSection.classList.add("hidden");
+                searchSection.classList.remove("hidden");
+                maintenanceSection.classList.add("hidden");
+                searchStore();
+            } else if (section === "maintenance") {
+                homeSection.classList.add("hidden");
+                searchSection.classList.add("hidden");
+                maintenanceSection.classList.remove("hidden");
+                showMaintenanceSubSection("upload");
+            }
+        }
+
+        // 显示后台维护子功能
+        function showMaintenanceSubSection(subSection) {
+            const uploadSubSection = document.getElementById("uploadSubSection");
+            const addStoreSubSection = document.getElementById("addStoreSubSection");
+            const tileMaintenanceSubSection = document.getElementById("tileMaintenanceSubSection");
+
+            if (subSection === "upload") {
+                uploadSubSection.classList.remove("hidden");
+                addStoreSubSection.classList.add("hidden");
+                tileMaintenanceSubSection.classList.add("hidden");
+            } else if (subSection === "addStore") {
+                uploadSubSection.classList.add("hidden");
+                addStoreSubSection.classList.remove("hidden");
+                tileMaintenanceSubSection.classList.add("hidden");
+            } else if (subSection === "tileMaintenance") {
+                uploadSubSection.classList.add("hidden");
+                addStoreSubSection.classList.add("hidden");
+                tileMaintenanceSubSection.classList.remove("hidden");
+            }
+        }
+
+        // 页面加载时默认显示首页
+        showSection("home");
+    </script>
+</body>
+</html>

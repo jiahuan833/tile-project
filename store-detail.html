@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>门店详情</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+        }
+        .sidebar button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+        }
+        .sidebar button:hover {
+            background-color: #005bb5;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        h3 {
+            margin-top: 0;
+        }
+        .back-link {
+            display: block;
+            margin-bottom: 20px;
+            color: #0066cc;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .search-box, .update-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        input, select, button {
+            padding: 8px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .edit-btn, .add-btn, .upload-btn, .submit-btn {
+            background-color: #0066cc;
+            padding: 5px 10px;
+            margin-left: 5px;
+        }
+        .edit-btn:hover, .add-btn:hover, .upload-btn:hover, .submit-btn:hover {
+            background-color: #005bb5;
+        }
+        .delete-btn {
+            background-color: #ff4444;
+        }
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
+        .edit-form {
+            display: none;
+            margin-top: 10px;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+        .sales-history {
+            margin-top: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow: auto;
+            text-align: center;
+        }
+        .modal-content img {
+            max-width: 100%;
+            max-height: 70vh;
+        }
+        .close-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .close-btn:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧功能按钮 -->
+    <div class="sidebar">
+        <button onclick="showSection('storeInfo')">门店信息</button>
+        <button onclick="showSection('tileInventory')">瓷砖库存清点</button>
+        <button onclick="showSection('salesFollowUp')">销售跟进情况</button>
+    </div>
+
+    <!-- 右侧内容区域 -->
+    <div class="content">
+        <a href="index.html" class="back-link">返回门店搜索</a>
+
+        <!-- 门店信息 -->
+        <div id="storeInfoSection" class="section">
+            <h2>门店信息</h2>
+            <div class="update-box">
+                <button onclick="toggleSalesUpdate()">更新</button>
+            </div>
+            <table>
+                <tr><th>门店名称</th><td id="storeName"></td></tr>
+                <tr><th>地址</th><td id="address"></td></tr>
+                <tr>
+                    <th>负责人</th>
+                    <td id="managerCell">
+                        <span id="manager"></span>
+                        <button class="edit-btn" onclick="toggleManagerUpdate()">更新</button>
+                    </td>
+                </tr>
+                <tr><th>销售人员</th><td id="salesman"></td></tr>
+                <tr>
+                    <th>价格级别</th>
+                    <td id="priceLevel">
+                        <span id="priceLevelText"></span>
+                        <button class="edit-btn" onclick="editPriceLevel()">编辑</button>
+                        <button class="delete-btn" onclick="deletePriceLevel()">删除</button>
+                    </td>
+                </tr>
+                <tr>
+                    <th>每月销售金额</th>
+                    <td id="salesAmount"></td>
+                </tr>
+            </table>
+            <div id="priceLevelForm" class="edit-form">
+                <select id="priceLevelSelect">
+                    <option value="Loose">散装价格</option>
+                    <option value="Pallet">托盘价格</option>
+                    <option value="Bulk">批量价格</option>
+                </select>
+                <button onclick="savePriceLevel()">保存</button>
+            </div>
+            <div id="salesUpdateForm" class="edit-form">
+                <input type="number" id="salesJan" placeholder="JAN 金额">
+                <input type="number" id="salesFeb" placeholder="FEB 金额">
+                <input type="number" id="salesMar" placeholder="MAR 金额">
+                <input type="number" id="salesApr" placeholder="APR 金额">
+                <input type="number" id="salesMay" placeholder="MAY 金额">
+                <input type="number" id="salesJun" placeholder="JUN 金额">
+                <input type="number" id="salesJul" placeholder="JUL 金额">
+                <input type="number" id="salesAug" placeholder="AUG 金额">
+                <input type="number" id="salesSep" placeholder="SEP 金额">
+                <input type="number" id="salesOct" placeholder="OCT 金额">
+                <input type="number" id="salesNov" placeholder="NOV 金额">
+                <input type="number" id="salesDec" placeholder="DEC 金额">
+                <button onclick="saveSalesAmount()">保存</button>
+            </div>
+            <div id="managerUpdateForm" class="edit-form">
+                <input type="text" id="newManager" placeholder="请输入新负责人">
+                <button onclick="saveManager()">保存</button>
+            </div>
+        </div>
+
+        <!-- 瓷砖库存清点 -->
+        <div id="tileInventorySection" class="section hidden">
+            <h2>瓷砖库存清点</h2>
+            <div class="search-box">
+                <input type="text" id="tileSearch" placeholder="输入尺寸、代码、名称或描述模糊搜索..." oninput="searchTiles()">
+                <button onclick="submitTiles()">提交</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>尺寸</th>
+                        <th>代码</th>
+                        <th>名称</th>
+                        <th>描述</th>
+                        <th>散装价格</th>
+                        <th>托盘价格</th>
+                        <th>批量价格</th>
+                        <th>清点</th>
+                    </tr>
+                </thead>
+                <tbody id="tileTableBody">
+                    <!-- 动态填充瓷砖信息 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 销售跟进情况 -->
+        <div id="salesFollowUpSection" class="section hidden">
+            <h2>销售跟进情况</h2>
+            <div class="section">
+                <h3>已放置的瓷砖</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>瓷砖名称</th>
+                            <th>代号</th>
+                            <th>放置时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="placedTileTableBody">
+                        <!-- 动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="section">
+                <h3>备注</h3>
+                <div class="update-box">
+                    <button onclick="toggleFollowUpUpdate()">新增</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>事项</th>
+                            <th>负责人</th>
+                            <th>跟进日期</th>
+                            <th>图片</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="followUpTableBody">
+                        <!-- 动态填充 -->
+                    </tbody>
+                </table>
+                <div id="editFollowUpForm" class="edit-form">
+                    <input type="text" id="editTask" placeholder="事项">
+                    <input type="text" id="editPerson" placeholder="负责人">
+                    <input type="date" id="editDeadline" placeholder="跟进日期">
+                    <input type="file" id="followUpImage" accept="image/*">
+                    <button onclick="saveFollowUp()">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图片弹窗 -->
+        <div id="imageModal" class="modal">
+            <div class="modal-content">
+                <img id="modalImage" src="" alt="备注图片">
+                <button class="close-btn" onclick="closeModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 从 localStorage 获取数据
+        let stores = JSON.parse(localStorage.getItem("stores")) || [];
+        let tiles = JSON.parse(localStorage.getItem("tiles")) || [
+            { size: "75x300", itemCode: "WT30701", itemName: "Subway Flat Gloss White", description: "75x300mm", loosePrice: 18.50, palletPrice: 17.50, bulkPrice: 16.50 },
+            { size: "75x300", itemCode: "WT30702", itemName: "Subway Flat Matt White", description: "75x300mm", loosePrice: 18.50, palletPrice: 17.50, bulkPrice: 16.50 },
+            { size: "75x300", itemCode: "WT30703", itemName: "Subway Wave Gloss White", description: "75x300mm", loosePrice: 18.50, palletPrice: 17.50, bulkPrice: 16.50 }
+        ];
+
+        // 验证并修正 tiles 数据
+        tiles = tiles.map(tile => {
+            console.log("Raw tile data:", tile); // 调试用，检查原始数据
+            return {
+                size: tile["SIZE (MM)"] || tile.size || "",
+                itemCode: tile["ITEM CODE"] || tile.itemCode || "",
+                itemName: tile["ITEM NAME"] || tile.itemName || "",
+                description: tile["DESCRIPTION"] || tile.description || "",
+                loosePrice: parseFloat(tile["Loose Price"] || tile.loosePrice || tile["loosePrice"] || 0),
+                palletPrice: parseFloat(tile["Pallet Price"] || tile.palletPrice || tile["palletPrice"] || tile.loosePrice || 0),
+                bulkPrice: parseFloat(tile["Bulk Price"] || tile.bulkPrice || tile["bulkPrice"] || tile.loosePrice || 0)
+            };
+        });
+
+        // 获取URL中的门店ID并展示详情
+        const urlParams = new URLSearchParams(window.location.search);
+        const storeId = parseInt(urlParams.get("id"));
+        const store = stores.find(s => s.id === storeId);
+
+        let editingIndex = -1; // 当前编辑的跟进事项索引
+
+        if (store) {
+            // 初始化门店数据
+            store.salesHistory = store.salesHistory || Array(12).fill(0); // 12个月销售金额，默认0
+            store.priceLevel = store.priceLevel || "Loose"; // 默认价格级别为散装
+
+            // 填充基本信息
+            document.getElementById("storeName").textContent = store.name;
+            document.getElementById("address").textContent = store.address;
+            document.getElementById("manager").textContent = store.manager || "";
+            document.getElementById("salesman").textContent = store.salesman || "";
+            renderPriceLevel();
+            renderSalesAmount();
+
+            // 显示价格级别
+            function renderPriceLevel() {
+                const priceLevelText = document.getElementById("priceLevelText");
+                priceLevelText.textContent = store.priceLevel || "未设置";
+            }
+
+            // 编辑价格级别
+            function editPriceLevel() {
+                const form = document.getElementById("priceLevelForm");
+                form.style.display = form.style.display === "flex" ? "none" : "flex";
+                document.getElementById("priceLevelSelect").value = store.priceLevel || "Loose";
+            }
+
+            // 保存价格级别
+            function savePriceLevel() {
+                const priceLevel = document.getElementById("priceLevelSelect").value;
+                store.priceLevel = priceLevel;
+
+                const storeIndex = stores.findIndex(s => s.id === storeId);
+                stores[storeIndex] = store;
+                localStorage.setItem("stores", JSON.stringify(stores));
+
+                renderPriceLevel();
+                document.getElementById("priceLevelForm").style.display = "none";
+                alert("价格级别更新成功！");
+            }
+
+            // 删除价格级别
+            function deletePriceLevel() {
+                if (!store.priceLevel) {
+                    alert("当前没有价格级别可删除！");
+                    return;
+                }
+                if (confirm("确定要删除价格级别吗？")) {
+                    store.priceLevel = null;
+
+                    const storeIndex = stores.findIndex(s => s.id === storeId);
+                    stores[storeIndex] = store;
+                    localStorage.setItem("stores", JSON.stringify(stores));
+
+                    renderPriceLevel();
+                    alert("价格级别删除成功！");
+                }
+            }
+
+            // 显示销售金额
+            function renderSalesAmount() {
+                const salesAmountTd = document.getElementById("salesAmount");
+                const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+                salesAmountTd.innerHTML = store.salesHistory.map((amount, index) => 
+                    `${months[index]}: ${amount} 元`
+                ).join("<br>");
+            }
+
+            // 切换销售金额更新表单
+            function toggleSalesUpdate() {
+                const form = document.getElementById("salesUpdateForm");
+                form.style.display = form.style.display === "flex" ? "none" : "flex";
+                if (form.style.display === "flex") {
+                    document.getElementById("salesJan").value = store.salesHistory[0];
+                    document.getElementById("salesFeb").value = store.salesHistory[1];
+                    document.getElementById("salesMar").value = store.salesHistory[2];
+                    document.getElementById("salesApr").value = store.salesHistory[3];
+                    document.getElementById("salesMay").value = store.salesHistory[4];
+                    document.getElementById("salesJun").value = store.salesHistory[5];
+                    document.getElementById("salesJul").value = store.salesHistory[6];
+                    document.getElementById("salesAug").value = store.salesHistory[7];
+                    document.getElementById("salesSep").value = store.salesHistory[8];
+                    document.getElementById("salesOct").value = store.salesHistory[9];
+                    document.getElementById("salesNov").value = store.salesHistory[10];
+                    document.getElementById("salesDec").value = store.salesHistory[11];
+                }
+            }
+
+            // 保存销售金额
+            function saveSalesAmount() {
+                const jan = parseInt(document.getElementById("salesJan").value) || 0;
+                const feb = parseInt(document.getElementById("salesFeb").value) || 0;
+                const mar = parseInt(document.getElementById("salesMar").value) || 0;
+                const apr = parseInt(document.getElementById("salesApr").value) || 0;
+                const may = parseInt(document.getElementById("salesMay").value) || 0;
+                const jun = parseInt(document.getElementById("salesJun").value) || 0;
+                const jul = parseInt(document.getElementById("salesJul").value) || 0;
+                const aug = parseInt(document.getElementById("salesAug").value) || 0;
+                const sep = parseInt(document.getElementById("salesSep").value) || 0;
+                const oct = parseInt(document.getElementById("salesOct").value) || 0;
+                const nov = parseInt(document.getElementById("salesNov").value) || 0;
+                const dec = parseInt(document.getElementById("salesDec").value) || 0;
+                
+                store.salesHistory = [jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec];
+                store.salesAmount = dec; // 最新月（DEC）作为 salesAmount
+
+                const storeIndex = stores.findIndex(s => s.id === storeId);
+                stores[storeIndex] = store;
+                localStorage.setItem("stores", JSON.stringify(stores));
+
+                renderSalesAmount();
+                document.getElementById("salesUpdateForm").style.display = "none";
+                alert("销售金额更新成功！");
+            }
+
+            // 切换负责人更新表单
+            function toggleManagerUpdate() {
+                const form = document.getElementById("managerUpdateForm");
+                form.style.display = form.style.display === "flex" ? "none" : "flex";
+                if (form.style.display === "flex") {
+                    document.getElementById("newManager").value = store.manager || "";
+                }
+            }
+
+            // 保存负责人
+            function saveManager() {
+                const newManager = document.getElementById("newManager").value.trim();
+                if (!newManager) {
+                    alert("负责人不能为空！");
+                    return;
+                }
+                store.manager = newManager;
+
+                const storeIndex = stores.findIndex(s => s.id === storeId);
+                stores[storeIndex] = store;
+                localStorage.setItem("stores", JSON.stringify(stores));
+
+                document.getElementById("manager").textContent = newManager;
+                document.getElementById("managerUpdateForm").style.display = "none";
+                alert("负责人更新成功！");
+            }
+
+            // 模糊搜索瓷砖
+            function searchTiles() {
+                const query = document.getElementById("tileSearch").value.trim().toLowerCase();
+                console.log("Search query:", query); // 调试用，检查输入
+                console.log("Tiles data:", tiles); // 调试用，检查 tiles 数组
+                const results = tiles.filter(tile => {
+                    return (tile.size && typeof tile.size === 'string' && tile.size.toLowerCase().includes(query)) ||
+                           (tile.itemCode && typeof tile.itemCode === 'string' && tile.itemCode.toLowerCase().includes(query)) ||
+                           (tile.itemName && typeof tile.itemName === 'string' && tile.itemName.toLowerCase().includes(query)) ||
+                           (tile.description && typeof tile.description === 'string' && tile.description.toLowerCase().includes(query));
+                });
+                const tbody = document.getElementById("tileTableBody");
+                tbody.innerHTML = "";
+                console.log("Search results:", results); // 调试用，检查结果
+                if (results.length > 0) {
+                    results.forEach(tile => {
+                        const row = `<tr>
+                            <td>${tile.size || ''}</td>
+                            <td>${tile.itemCode || ''}</td>
+                            <td>${tile.itemName || ''}</td>
+                            <td>${tile.description || ''}</td>
+                            <td>$${tile.loosePrice ? tile.loosePrice.toFixed(2) : 'N/A'}/m²</td>
+                            <td>$${tile.palletPrice ? tile.palletPrice.toFixed(2) : 'N/A'}/m²</td>
+                            <td>$${tile.bulkPrice ? tile.bulkPrice.toFixed(2) : 'N/A'}/m²</td>
+                            <td><button class="submit-btn" onclick="submitSingleTile('${tile.itemCode}')">提交</button></td>
+                        </tr>`;
+                        tbody.innerHTML += row;
+                    });
+                } else {
+                    tbody.innerHTML = "<tr><td colspan='8'>未找到瓷砖</td></tr>";
+                }
+            }
+
+            // 提交单个瓷砖
+            function submitSingleTile(itemCode) {
+                const tile = tiles.find(t => t.itemCode === itemCode);
+                if (tile) {
+                    const placedTile = {
+                        itemName: tile.itemName,
+                        itemCode: tile.itemCode,
+                        placedTime: new Date().toISOString().split("T")[0]
+                    };
+                    store.tiles = store.tiles || [];
+                    store.tiles.push(placedTile);
+                    
+                    const storeIndex = stores.findIndex(s => s.id === storeId);
+                    stores[storeIndex] = store;
+                    localStorage.setItem("stores", JSON.stringify(stores));
+
+                    renderPlacedTiles();
+                    alert(`瓷砖 ${tile.itemName} 提交成功！`);
+                    searchTiles(); // 刷新表格
+                } else {
+                    alert("未找到对应的瓷砖！");
+                }
+            }
+
+            // 提交勾选的瓷砖（保留原有功能）
+            function submitTiles() {
+                const checkedTiles = Array.from(document.querySelectorAll("input[name='tileCheck']:checked"))
+                    .map(checkbox => {
+                        const row = checkbox.closest("tr");
+                        return {
+                            itemName: row.cells[2].textContent,
+                            itemCode: row.cells[1].textContent,
+                            placedTime: new Date().toISOString().split("T")[0]
+                        };
+                    });
+
+                if (checkedTiles.length === 0) {
+                    alert("请至少勾选一个瓷砖！");
+                    return;
+                }
+
+                store.tiles = store.tiles || [];
+                store.tiles = [...store.tiles, ...checkedTiles];
+                
+                const storeIndex = stores.findIndex(s => s.id === storeId);
+                stores[storeIndex] = store;
+                localStorage.setItem("stores", JSON.stringify(stores));
+
+                renderPlacedTiles();
+                alert("瓷砖提交成功！");
+                searchTiles();
+            }
+
+            // 切换备注更新表单
+            function toggleFollowUpUpdate() {
+                const form = document.getElementById("editFollowUpForm");
+                form.style.display = form.style.display === "flex" ? "none" : "flex";
+                editingIndex = -1; // 新增模式
+                document.getElementById("editTask").value = "";
+                document.getElementById("editPerson").value = "";
+                document.getElementById("editDeadline").value = "";
+                document.getElementById("followUpImage").value = ""; // 清空图片选择
+            }
+
+            // 编辑备注
+            function editFollowUp(index) {
+                const followUp = store.followUps[index];
+                document.getElementById("editTask").value = followUp.task;
+                document.getElementById("editPerson").value = followUp.person;
+                document.getElementById("editDeadline").value = followUp.deadline;
+                document.getElementById("followUpImage").value = ""; // 清空图片选择
+                document.getElementById("editFollowUpForm").style.display = "flex";
+                editingIndex = index;
+            }
+
+            // 保存备注
+            function saveFollowUp() {
+                const task = document.getElementById("editTask").value.trim();
+                const person = document.getElementById("editPerson").value.trim();
+                const deadline = document.getElementById("editDeadline").value;
+                const imageInput = document.getElementById("followUpImage");
+                const imageFile = imageInput.files[0];
+
+                if (!task || !person || !deadline) {
+                    alert("请填写所有字段！");
+                    return;
+                }
+
+                store.followUps = store.followUps || [];
+                let followUp = { task, person, deadline };
+                if (imageFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        followUp.imageData = e.target.result; // 存储 base64 编码的图片数据
+                        if (editingIndex === -1) {
+                            store.followUps.push(followUp);
+                        } else {
+                            store.followUps[editingIndex] = followUp;
+                        }
+
+                        const storeIndex = stores.findIndex(s => s.id === storeId);
+                        stores[storeIndex] = store;
+                        localStorage.setItem("stores", JSON.stringify(stores));
+
+                        renderFollowUps();
+                        document.getElementById("editFollowUpForm").style.display = "none";
+                        editingIndex = -1;
+                        alert("备注保存成功！");
+                    };
+                    reader.readAsDataURL(imageFile);
+                } else {
+                    if (editingIndex === -1) {
+                        store.followUps.push(followUp);
+                    } else {
+                        followUp.imageData = store.followUps[editingIndex].imageData; // 保留原有图片
+                        store.followUps[editingIndex] = followUp;
+                    }
+
+                    const storeIndex = stores.findIndex(s => s.id === storeId);
+                    stores[storeIndex] = store;
+                    localStorage.setItem("stores", JSON.stringify(stores));
+
+                    renderFollowUps();
+                    document.getElementById("editFollowUpForm").style.display = "none";
+                    editingIndex = -1;
+                    alert("备注保存成功！");
+                }
+            }
+
+            // 删除已放置的瓷砖
+            function deletePlacedTile(index) {
+                if (confirm("确定要删除该瓷砖记录吗？")) {
+                    store.tiles.splice(index, 1);
+                    const storeIndex = stores.findIndex(s => s.id === storeId);
+                    stores[storeIndex] = store;
+                    localStorage.setItem("stores", JSON.stringify(stores));
+                    renderPlacedTiles();
+                    alert("瓷砖记录删除成功！");
+                }
+            }
+
+            // 删除备注
+            function deleteFollowUp(index) {
+                if (confirm("确定要删除该备注吗？")) {
+                    store.followUps.splice(index, 1);
+                    const storeIndex = stores.findIndex(s => s.id === storeId);
+                    stores[storeIndex] = store;
+                    localStorage.setItem("stores", JSON.stringify(stores));
+                    renderFollowUps();
+                    alert("备注删除成功！");
+                }
+            }
+
+            // 渲染已放置的瓷砖
+            function renderPlacedTiles() {
+                const placedTileTableBody = document.getElementById("placedTileTableBody");
+                placedTileTableBody.innerHTML = "";
+                (store.tiles || []).forEach((tile, index) => {
+                    placedTileTableBody.innerHTML += `<tr>
+                        <td>${tile.itemName}</td>
+                        <td>${tile.itemCode}</td>
+                        <td>${tile.placedTime}</td>
+                        <td><button class="delete-btn" onclick="deletePlacedTile(${index})">删除</button></td>
+                    </tr>`;
+                });
+            }
+
+            // 渲染备注
+            function renderFollowUps() {
+                const followUpTableBody = document.getElementById("followUpTableBody");
+                followUpTableBody.innerHTML = "";
+                (store.followUps || []).forEach((followUp, index) => {
+                    followUpTableBody.innerHTML += `<tr>
+                        <td>${followUp.task}</td>
+                        <td>${followUp.person}</td>
+                        <td>${followUp.deadline}</td>
+                        <td><button class="upload-btn" onclick="showImage(${index})">查看图片</button></td>
+                        <td>
+                            <button class="edit-btn" onclick="editFollowUp(${index})">修改</button>
+                            <button class="delete-btn" onclick="deleteFollowUp(${index})">删除</button>
+                        </td>
+                    </tr>`;
+                });
+            }
+
+            // 显示图片
+            function showImage(index) {
+                const followUp = store.followUps[index];
+                if (followUp && followUp.imageData) {
+                    document.getElementById("modalImage").src = followUp.imageData;
+                    document.getElementById("imageModal").style.display = "flex";
+                } else {
+                    alert("该备注没有上传图片！");
+                }
+            }
+
+            // 关闭弹窗
+            function closeModal() {
+                document.getElementById("imageModal").style.display = "none";
+                document.getElementById("modalImage").src = "";
+            }
+
+            // 显示指定功能区域
+            function showSection(section) {
+                const storeInfoSection = document.getElementById("storeInfoSection");
+                const tileInventorySection = document.getElementById("tileInventorySection");
+                const salesFollowUpSection = document.getElementById("salesFollowUpSection");
+
+                if (section === "storeInfo") {
+                    storeInfoSection.classList.remove("hidden");
+                    tileInventorySection.classList.add("hidden");
+                    salesFollowUpSection.classList.add("hidden");
+                    renderPriceLevel();
+                    renderSalesAmount();
+                } else if (section === "tileInventory") {
+                    storeInfoSection.classList.add("hidden");
+                    tileInventorySection.classList.remove("hidden");
+                    salesFollowUpSection.classList.add("hidden");
+                    searchTiles(); // 确保切换时触发搜索
+                    if (tiles.length === 0) {
+                        console.warn("Warning: tiles array is empty. Please upload tiles data via index.html.");
+                    }
+                } else if (section === "salesFollowUp") {
+                    storeInfoSection.classList.add("hidden");
+                    tileInventorySection.classList.add("hidden");
+                    salesFollowUpSection.classList.remove("hidden");
+                    renderPlacedTiles();
+                    renderFollowUps();
+                }
+            }
+
+            // 初始化，默认显示门店信息
+            showSection("storeInfo");
+        } else {
+            document.querySelector(".content").innerHTML = "<p>未找到该门店信息</p>";
+        }
+    </script>
+</body>
+</html>
