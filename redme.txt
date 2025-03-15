@@ -1,0 +1,62 @@
+redme:
+备份 和 恢复 数据功能使用步骤
+备份数据：
+点击“备份数据”按钮，下载备份文件（例如 backup_2025-03-15.json）。保存文件到本地。
+恢复数据：
+点击“恢复数据”按钮，选择之前下载的备份文件（.json 格式）。系统会自动读取文件内容，覆盖当前 localStorage 数据，并刷新页面。
+
+成功后会提示“数据恢复成功！页面已更新。”。
+
+
+
+
+如何通过开发者工具清空 localStorage 中的 stores 和 tiles 数据。以下是操作步骤，适用于 Chrome 浏览器（其他浏览器如 Firefox 的步骤类似，但界面可能略有不同）：
+
+步骤 1：打开开发者工具
+打开网页：
+
+确保你已经打开了 store-detail.html 文件（可以通过浏览器直接打开，或通过本地服务器运行）。
+打开开发者工具：
+
+按下键盘上的 F12 键（或者在 Windows 上按 Ctrl + Shift + I，在 Mac 上按 Cmd + Option + I）。
+或者，右键点击页面空白处，选择“检查”（Inspect），会弹出开发者工具。
+结果：你会看到一个面板，通常在页面底部或右侧，包含多个选项卡（如 Elements、Console、Sources 等）。
+
+步骤 2：找到 Local Storage
+切换到 Application 选项卡：
+
+在开发者工具的顶部，找到“Application”选项卡（可能需要点击“>>”按钮查看更多选项卡，如果没有直接显示）。
+点击“Application”选项卡。
+结果：你会看到左侧有一个导航栏，包含“Storage”或“Local Storage”等项。
+
+定位 Local Storage：
+
+在左侧导航栏中，展开“Storage”或“Local Storage”。
+找到与你当前网页相关的域名，通常是 http://localhost（如果你通过本地服务器运行），或者 file://（如果你直接打开 HTML 文件）。
+结果：右侧会显示当前 localStorage 中的键值对，例如 stores 和 tiles。
+
+步骤 3：删除 stores 和 tiles 数据
+选中并删除 stores：
+
+在右侧列表中，找到 stores 键。
+右键点击 stores，选择“Delete”或“删除”（根据浏览器语言不同，选项可能不同）。
+或者，点击 stores 左侧的小“x”按钮（如果有）。
+结果：stores 键及其值会被移除，列表中不再显示 stores。
+
+选中并删除 tiles：
+
+重复上述步骤，找到 tiles 键。
+右键点击 tiles，选择“Delete”或“删除”，或者点击小“x”按钮。
+结果：tiles 键及其值也会被移除。
+
+步骤 4：验证并刷新
+检查是否清空：
+
+确认 localStorage 列表中不再有 stores 和 tiles。
+如果列表为空，说明数据已成功清空。
+刷新页面：
+
+关闭开发者工具（点击右上角的“x”或按 F12 再次关闭）。
+刷新网页（按 F5 或点击浏览器刷新按钮）。
+重新打开开发者工具，检查“Application” > “Local Storage”，确认 stores 和 tiles 仍然为空。
+结果：如果一切正常，localStorage 数据应已清空。
