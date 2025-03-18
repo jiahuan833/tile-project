@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OWS Sales System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 100px;
+            background-color: #f4f4f4;
+            padding: 10px 0;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .sidebar button {
+            display: block;
+            width: 90px;
+            padding: 8px;
+            margin: 5px auto;
+            font-size: 14px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sidebar button:hover {
+            background-color: #005bb5;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .search-box, .update-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        input, button, select {
+            padding: 8px;
+            font-size: 14px;
+        }
+        input[readonly] {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .edit-btn, .add-btn, .upload-btn, .submit-btn {
+            background-color: #0066cc;
+            padding: 5px 10px;
+            margin-left: 5px;
+        }
+        .edit-btn:hover, .add-btn:hover, .upload-btn:hover, .submit-btn:hover {
+            background-color: #005bb5;
+        }
+        .delete-btn {
+            background-color: #ff4444;
+        }
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            position: relative;
+        }
+        th:hover {
+            background-color: #e0e0e0;
+        }
+        .sort-arrow {
+            display: inline-block;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        .hidden {
+            display: none;
+        }
+        .no-data {
+            color: #ff4444;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .home-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        .home-title {
+            font-size: 48px;
+            color: #0066cc;
+            background-color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        .edit-form {
+            display: none;
+            margin-top: 10px;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+            text-align: center;
+        }
+        .modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+        }
+        .close-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .close-btn:hover {
+            background-color: #cc0000;
+        }
+        .store-header {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .image-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .image-item {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-item .delete-image-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 2px 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .image-item .delete-image-btn:hover {
+            background-color: #cc0000;
+        }
+        .phone-number, .contact-person {
+            color: #0066cc;
+            font-weight: bold;
+        }
+        .phone-number:hover, .contact-person:hover {
+            text-decoration: underline;
+        }
+        #existingSamplesSection table,
+        #missingSamplesSection table {
+            border-collapse: collapse;
+        }
+        #existingSamplesSection th,
+        #existingSamplesSection td,
+        #missingSamplesSection th,
+        #missingSamplesSection td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        #existingSamplesSection th,
+        #missingSamplesSection th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        #existingSamplesSection .size-row,
+        #missingSamplesSection .size-row {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        #tileInventorySection .checkbox-cell {
+            text-align: center;
+        }
+        #missingSamplesSection .missing-row {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        @media (max-width: 600px) {
+            .sidebar {
+                width: 80px;
+            }
+            .sidebar button {
+                width: 70px;
+                font-size: 12px;
+                padding: 6px;
+            }
+            .content {
+                padding: 10px;
+            }
+            input, button, select {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            table, th, td {
+                font-size: 12px;
+            }
+            .home-title {
+                font-size: 24px;
+                padding: 10px;
+            }
+            .sort-arrow {
+                font-size: 10px;
+            }
+            .image-item {
+                width: 100px;
+                height: 100px;
+            }
+            .phone-number, .contact-person {
+                display: block;
+                word-break: break-all;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <button onclick="showSection('home')">首页</button>
+        <button onclick="showSection('dataUpload')">数据上传</button>
+        <button onclick="showSection('storeSearch')">门店搜索</button>
+        <button onclick="showSection('storeInfo')">门店信息</button>
+        <button onclick="showSection('memo')">备忘事项</button>
+        <button onclick="showSection('tileInventory')">库存清点</button>
+        <button onclick="showSection('salesFollowUp')">跟进情况</button>
+        <button onclick="showSection('existingSamples')">已有样品</button>
+        <button onclick="showSection('missingSamples')">欠缺样品</button>
+        <button onclick="backupData()">备份数据</button>
+        <button onclick="document.getElementById('restoreInput').click()">恢复数据</button>
+        <input type="file" id="restoreInput" accept=".json" style="display: none;" onchange="restoreData(event)">
+    </div>
+
+    <div class="content">
+        <!-- 首页 -->
+        <div id="homeSection" class="section">
+            <div class="home-section">
+                <h1 class="home-title">OWS Sales System</h1>
+            </div>
+        </div>
+
+        <!-- 数据上传 -->
+        <div id="dataUploadSection" class="section hidden">
+            <h2>数据上传</h2>
+            <div class="update-box">
+                <button onclick="showSection('tileUpload')">瓷砖上传</button>
+                <button onclick="showSection('storeUpload')">门店上传</button>
+            </div>
+        </div>
+
+        <!-- 瓷砖上传 -->
+        <div id="tileUploadSection" class="section hidden">
+            <h2>瓷砖上传</h2>
+            <input type="file" id="tileFile" accept=".xlsx" onchange="uploadTiles()">
+            <p>请上传 Excel 文件（包含列：SIZE (MM), ITEM CODE, ITEM NAME, DESCRIPTION）</p>
+            <button onclick="showSection('dataUpload')">返回</button>
+        </div>
+
+        <!-- 门店上传 -->
+        <div id="storeUploadSection" class="section hidden">
+            <h2>门店上传</h2>
+            <input type="file" id="storeFile" accept=".xlsx" onchange="uploadStores()">
+            <p>请上传 Excel 文件（包含列：name, address, region, salesman, salesAmount 或中文列名如 门店名称、地址等）</p>
+            <button onclick="showSection('dataUpload')">返回</button>
+        </div>
+
+        <!-- 备忘事项 -->
+        <div id="memoSection" class="section hidden">
+            <div class="store-header">
+                <h2>备忘事项 - <span id="memoStoreName"></span></h2>
+            </div>
+            <div class="update-box">
+                <button onclick="toggleMemoForm()">新增</button>
+                <button class="delete-btn" onclick="deleteSelectedMemos()">删除</button>
+            </div>
+            <div id="memoForm" class="edit-form">
+                <input type="date" id="memoDate">
+                <input type="text" id="memoContent" placeholder="请输入备忘事项">
+                <button onclick="addMemo()">保存</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAllMemos" onclick="toggleSelectAllMemos()"></th>
+                        <th>日期</th>
+                        <th>备忘事项</th>
+                    </tr>
+                </thead>
+                <tbody id="memoTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 门店搜索 -->
+        <div id="storeSearchSection" class="section hidden">
+            <h2>门店搜索</h2>
+            <div class="search-box">
+                <select id="salesmanFilter" onchange="filterStores()">
+                    <option value="">所有销售人员</option>
+                </select>
+                <input type="text" id="storeSearch" placeholder="输入门店名称搜索..." oninput="searchStores()">
+                <button onclick="searchStores()">搜索</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('name')">门店名称<span class="sort-arrow" id="sortNameArrow"></span></th>
+                        <th onclick="sortTable('address')">地址</th>
+                        <th onclick="sortTable('region')">区域<span class="sort-arrow" id="sortRegionArrow"></span></th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="storeTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 门店信息 -->
+        <div id="storeInfoSection" class="section hidden">
+            <h2>门店信息</h2>
+            <div id="storeHeader" class="store-header">
+                <h2 id="storeNameHeader"></h2>
+            </div>
+            <table>
+                <tr><th>门店名称</th><td id="storeName"></td></tr>
+                <tr>
+                    <th>电话号码</th>
+                    <td id="phoneNumber">
+                        <span id="phoneNumberText" class="phone-number"></span>
+                        <button class="edit-btn" onclick="editPhoneNumber()">编辑</button>
+                        <button class="delete-btn" onclick="deletePhoneNumber()">删除</button>
+                    </td>
+                </tr>
+                <tr>
+                    <th>门店联系人</th>
+                    <td id="contactPerson">
+                        <span id="contactPersonText" class="contact-person"></span>
+                        <button class="edit-btn" onclick="editContactPerson()">编辑</button>
+                        <button class="delete-btn" onclick="deleteContactPerson()">删除</button>
+                    </td>
+                </tr>
+                <tr>
+                    <th>销售金额</th>
+                    <td id="salesAmountCell">
+                        <span id="salesAmount"></span>
+                        <button class="edit-btn" onclick="toggleSalesAmountUpdate()">更新</button>
+                    </td>
+                </tr>
+                <tr>
+                    <th>价格级别</th>
+                    <td id="priceLevel">
+                        <span id="priceLevelText"></span>
+                        <button class="edit-btn" onclick="editPriceLevel()">编辑</button>
+                        <button class="delete-btn" onclick="deletePriceLevel()">删除</button>
+                    </td>
+                </tr>
+            </table>
+            <div id="phoneNumberForm" class="edit-form">
+                <input type="text" id="phoneNumberInput" placeholder="请输入电话号码">
+                <button onclick="savePhoneNumber()">保存</button>
+            </div>
+            <div id="contactPersonForm" class="edit-form">
+                <input type="text" id="contactPersonInput" placeholder="请输入门店联系人">
+                <button onclick="saveContactPerson()">保存</button>
+            </div>
+            <div id="salesAmountUpdateForm" class="edit-form">
+                <input type="number" id="newSalesAmount" placeholder="请输入销售金额">
+                <button onclick="saveSalesAmount()">保存</button>
+            </div>
+            <div id="priceLevelForm" class="edit-form">
+                <select id="priceLevelSelect">
+                    <option value="Loose">散装价格</option>
+                    <option value="Pallet">托盘价格</option>
+                    <option value="Bulk">批量价格</option>
+                </select>
+                <button onclick="savePriceLevel()">保存</button>
+            </div>
+            <div class="section">
+                <h3>门店照片</h3>
+                <input type="file" id="storePhotoUpload" accept="image/*" onchange="uploadStorePhoto(event)">
+                <div id="photoGallery" class="image-gallery"></div>
+            </div>
+        </div>
+
+        <!-- 库存清点 -->
+        <div id="tileInventorySection" class="section hidden">
+            <div class="store-header">
+                <h2>库存清点 - <span id="tileInventoryStoreName"></span></h2>
+            </div>
+            <div class="search-box">
+                <input type="text" id="tileSearch" placeholder="输入尺寸、代码、名称或描述模糊搜索..." oninput="searchTiles()">
+                <button onclick="submitTiles()">提交</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>尺寸</th>
+                        <th>代码</th>
+                        <th>名称</th>
+                        <th>描述</th>
+                        <th>清点</th>
+                    </tr>
+                </thead>
+                <tbody id="tileTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 跟进情况 -->
+        <div id="salesFollowUpSection" class="section hidden">
+            <div class="store-header">
+                <h2>跟进情况 - <span id="salesFollowUpStoreName"></span></h2>
+            </div>
+            <div class="update-box">
+                <button onclick="toggleFollowUpUpdate()">新增</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>事项</th>
+                        <th>跟进日期</th>
+                        <th>图片</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="followUpTableBody"></tbody>
+            </table>
+            <div id="editFollowUpForm" class="edit-form">
+                <input type="text" id="editTask" placeholder="事项">
+                <input type="date" id="editDeadline" placeholder="跟进日期">
+                <input type="file" id="followUpImage" accept="image/*">
+                <button onclick="saveFollowUp()">保存</button>
+            </div>
+        </div>
+
+        <!-- 已有样品 -->
+        <div id="existingSamplesSection" class="section hidden">
+            <div class="store-header">
+                <h2>已有样品 - <span id="existingSamplesStoreName"></span></h2>
+            </div>
+            <div class="update-box">
+                <button class="add-btn" onclick="toggleSampleForm('add')">新增</button>
+                <button class="delete-btn" onclick="deleteSelectedSamples()">删除</button>
+                <button class="submit-btn" onclick="exportExistingSamples()">导出</button>
+            </div>
+            <div id="sampleForm" class="edit-form">
+                <select id="sampleTileName" onchange="updateTileCode()">
+                    <option value="">请选择瓷砖名称</option>
+                </select>
+                <input type="text" id="sampleTileCode" placeholder="瓷砖代号（自动匹配）" readonly>
+                <input type="date" id="samplePlacedTime">
+                <button id="sampleFormSubmitBtn" onclick="saveSample()">保存</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>尺寸</th>
+                        <th>代码</th>
+                        <th>选择</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="placedTileTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 欠缺样品 -->
+        <div id="missingSamplesSection" class="section hidden">
+            <div class="store-header">
+                <h2>欠缺样品 - <span id="missingSamplesStoreName"></span></h2>
+            </div>
+            <div class="update-box">
+                <button class="submit-btn" onclick="exportMissingSamples()">导出</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>尺寸</th>
+                        <th>代码</th>
+                        <th>名称</th>
+                        <th>描述</th>
+                    </tr>
+                </thead>
+                <tbody id="missingTileTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 图片弹窗 -->
+        <div id="imageModal" class="modal">
+            <div class="modal-content">
+                <img id="modalImage" src="" alt="门店图片">
+                <button class="close-btn" onclick="closeModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        let stores = JSON.parse(localStorage.getItem("stores")) || [];
+        let tiles = JSON.parse(localStorage.getItem("tiles")) || [
+            { size: "800x600", itemCode: "66701", itemName: "Sample 1", description: "Description 1" },
+            { size: "600x600", itemCode: "66802", itemName: "Sample 3", description: "Description 3" }
+        ];
+        let memos = JSON.parse(localStorage.getItem("memos")) || [];
+        let currentStore = null;
+        let editingIndex = -1;
+        let editingSampleIndex = -1;
+        let sortConfig = { key: null, direction: 'asc' };
+
+        // 初始化stores中的photos字段
+        stores.forEach(store => {
+            store.priceLevel = store.priceLevel || "Loose";
+            store.tiles = store.tiles || [];
+            store.phoneNumber = store.phoneNumber || "";
+            store.contactPerson = store.contactPerson || "";
+            store.photos = store.photos || [];
+            store.images = store.images || [];
+            store.followUps = store.followUps || [];
+            if (!store.lastClicked) store.lastClicked = new Date().toISOString();
+        });
+        localStorage.setItem("stores", JSON.stringify(stores));
+
+        function populateSalesmanFilter() {
+            const salesmanFilter = document.getElementById("salesmanFilter");
+            const uniqueSalesmen = [...new Set(stores.map(store => store.salesman).filter(s => s))];
+            salesmanFilter.innerHTML = '<option value="">所有销售人员</option>';
+            uniqueSalesmen.forEach(salesman => {
+                salesmanFilter.innerHTML += `<option value="${salesman}">${salesman}</option>`;
+            });
+        }
+
+        function renderStoreTable(filteredStores = stores) {
+            const tbody = document.getElementById("storeTableBody");
+            tbody.innerHTML = "";
+            filteredStores.sort((a, b) => new Date(b.lastClicked) - new Date(a.lastClicked));
+            if (sortConfig.key) {
+                filteredStores.sort((a, b) => {
+                    let valueA = a[sortConfig.key] || '';
+                    let valueB = b[sortConfig.key] || '';
+                    if (typeof valueA === 'string') valueA = valueA.toLowerCase();
+                    if (typeof valueB === 'string') valueB = valueB.toLowerCase();
+                    return sortConfig.direction === 'asc' ? (valueA < valueB ? -1 : 1) : (valueA < valueB ? 1 : -1);
+                });
+            }
+            if (filteredStores.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="no-data">未找到门店</td></tr>`;
+                return;
+            }
+            filteredStores.forEach(store => {
+                tbody.innerHTML += `<tr>
+                    <td>${store.name || "未知门店"}</td>
+                    <td>${store.address || "未知地址"}</td>
+                    <td>${store.region || "未知区域"}</td>
+                    <td><button onclick="viewStoreDetail(${store.id})">查看详情</button></td>
+                </tr>`;
+            });
+            updateSortArrows();
+        }
+
+        function sortTable(key) {
+            if (sortConfig.key === key) {
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.key = key;
+                sortConfig.direction = 'asc';
+            }
+            searchStores();
+        }
+
+        function updateSortArrows() {
+            const arrows = {
+                name: document.getElementById("sortNameArrow"),
+                region: document.getElementById("sortRegionArrow")
+            };
+            for (let key in arrows) arrows[key].textContent = '';
+            if (sortConfig.key) arrows[sortConfig.key].textContent = sortConfig.direction === 'asc' ? '↑' : '↓';
+        }
+
+        function searchStores() {
+            const query = document.getElementById("storeSearch").value.trim().toLowerCase();
+            const salesmanFilter = document.getElementById("salesmanFilter").value;
+            let filteredStores = stores;
+            if (salesmanFilter) filteredStores = filteredStores.filter(store => store.salesman === salesmanFilter);
+            if (query) {
+                filteredStores = filteredStores.filter(store =>
+                    (store.name && store.name.toLowerCase().includes(query)) ||
+                    (store.address && store.address.toLowerCase().includes(query)) ||
+                    (store.region && store.region.toLowerCase().includes(query))
+                );
+            }
+            renderStoreTable(filteredStores);
+        }
+
+        function filterStores() {
+            searchStores();
+        }
+
+        function viewStoreDetail(storeId) {
+            currentStore = stores.find(s => s.id === storeId);
+            if (currentStore) {
+                currentStore.lastClicked = new Date().toISOString();
+                localStorage.setItem("stores", JSON.stringify(stores));
+                showSection('storeInfo');
+            }
+        }
+
+        function uploadTiles() {
+            const file = document.getElementById("tileFile").files[0];
+            if (!file) return alert("请选择一个 Excel 文件！");
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                tiles = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]).map(tile => ({
+                    size: tile["SIZE (MM)"] || tile.size || "",
+                    itemCode: tile["ITEM CODE"] || tile.itemCode || "",
+                    itemName: tile["ITEM NAME"] || tile.itemName || "",
+                    description: tile["DESCRIPTION"] || tile.description || ""
+                }));
+                localStorage.setItem("tiles", JSON.stringify(tiles));
+                alert("瓷砖上传成功！");
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function uploadStores() {
+            const file = document.getElementById("storeFile").files[0];
+            if (!file) return alert("请选择一个 Excel 文件！");
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                stores = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]).map((store, index) => ({
+                    id: index + 1,
+                    name: store.name || store["门店名称"] || "未知门店",
+                    address: store.address || store["地址"] || "未知地址",
+                    region: store.region || store["区域"] || "未知区域",
+                    salesman: store.salesman || store["销售人员"] || "",
+                    salesAmount: parseFloat(store.salesAmount || store["销售金额"] || 0),
+                    lastClicked: new Date().toISOString(),
+                    priceLevel: "Loose",
+                    tiles: [],
+                    phoneNumber: "",
+                    contactPerson: "",
+                    photos: [],
+                    images: [],
+                    followUps: []
+                }));
+                localStorage.setItem("stores", JSON.stringify(stores));
+                renderStoreTable();
+                populateSalesmanFilter();
+                alert("门店上传成功！");
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function toggleMemoForm() {
+            const form = document.getElementById("memoForm");
+            form.style.display = form.style.display === "flex" ? "none" : "flex";
+            if (form.style.display === "flex") {
+                document.getElementById("memoDate").value = new Date().toISOString().split("T")[0];
+                document.getElementById("memoContent").value = "";
+            }
+        }
+
+        function addMemo() {
+            const date = document.getElementById("memoDate").value;
+            const content = document.getElementById("memoContent").value.trim();
+            if (!date || !content) return alert("请填写日期和内容！");
+            memos.push({ date, content });
+            localStorage.setItem("memos", JSON.stringify(memos));
+            renderMemos();
+            toggleMemoForm();
+            alert("备忘录添加成功！");
+        }
+
+        function toggleSelectAllMemos() {
+            const selectAllCheckbox = document.getElementById("selectAllMemos");
+            document.querySelectorAll("input[name='memoCheck']").forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        }
+
+        function deleteSelectedMemos() {
+            const checkedMemos = Array.from(document.querySelectorAll("input[name='memoCheck']:checked"));
+            if (checkedMemos.length === 0) return alert("请至少选择一个备忘录！");
+            if (confirm(`确定删除 ${checkedMemos.length} 个备忘录吗？`)) {
+                const indices = checkedMemos.map(cb => parseInt(cb.value)).sort((a, b) => b - a);
+                indices.forEach(index => memos.splice(index, 1));
+                localStorage.setItem("memos", JSON.stringify(memos));
+                renderMemos();
+                document.getElementById("selectAllMemos").checked = false;
+                alert("备忘录删除成功！");
+            }
+        }
+
+        function renderMemos() {
+            const tbody = document.getElementById("memoTableBody");
+            tbody.innerHTML = "";
+            memos.forEach((memo, index) => {
+                tbody.innerHTML += `<tr>
+                    <td><input type="checkbox" name="memoCheck" value="${index}"></td>
+                    <td>${memo.date}</td>
+                    <td>${memo.content}</td>
+                </tr>`;
+            });
+            if (memos.length === 0) tbody.innerHTML = `<tr><td colspan="3" class="no-data">暂无备忘事项</td></tr>`;
+        }
+
+        function renderPhoneNumber() {
+            if (!currentStore) return;
+            const phoneNumberText = document.getElementById("phoneNumberText");
+            phoneNumberText.innerHTML = currentStore.phoneNumber ? `<a href="tel:${currentStore.phoneNumber}" class="phone-number">${currentStore.phoneNumber}</a>` : "未设置";
+        }
+
+        function editPhoneNumber() {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const form = document.getElementById("phoneNumberForm");
+            form.style.display = form.style.display === "flex" ? "none" : "flex";
+            document.getElementById("phoneNumberInput").value = currentStore.phoneNumber || "";
+        }
+
+        function savePhoneNumber() {
+            if (!currentStore) return;
+            currentStore.phoneNumber = document.getElementById("phoneNumberInput").value.trim();
+            updateStore();
+            renderPhoneNumber();
+            document.getElementById("phoneNumberForm").style.display = "none";
+            alert("电话号码更新成功！");
+        }
+
+        function deletePhoneNumber() {
+            if (!currentStore || !currentStore.phoneNumber) return alert("无电话号码可删除！");
+            if (confirm("确定删除电话号码吗？")) {
+                currentStore.phoneNumber = "";
+                updateStore();
+                renderPhoneNumber();
+                alert("电话号码删除成功！");
+            }
+        }
+
+        function renderContactPerson() {
+            if (!currentStore) return;
+            const contactPersonText = document.getElementById("contactPersonText");
+            contactPersonText.textContent = currentStore.contactPerson || "未设置";
+        }
+
+        function editContactPerson() {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const form = document.getElementById("contactPersonForm");
+            form.style.display = form.style.display === "flex" ? "none" : "flex";
+            document.getElementById("contactPersonInput").value = currentStore.contactPerson || "";
+        }
+
+        function saveContactPerson() {
+            if (!currentStore) return;
+            currentStore.contactPerson = document.getElementById("contactPersonInput").value.trim();
+            updateStore();
+            renderContactPerson();
+            document.getElementById("contactPersonForm").style.display = "none";
+            alert("门店联系人更新成功！");
+        }
+
+        function deleteContactPerson() {
+            if (!currentStore || !currentStore.contactPerson) return alert("无门店联系人可删除！");
+            if (confirm("确定删除门店联系人吗？")) {
+                currentStore.contactPerson = "";
+                updateStore();
+                renderContactPerson();
+                alert("门店联系人删除成功！");
+            }
+        }
+
+        function uploadStorePhoto(event) {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentStore.photos.push(e.target.result);
+                updateStore();
+                renderPhotos();
+                alert("门店照片上传成功！");
+            };
+            reader.readAsDataURL(file);
+            event.target.value = "";
+        }
+
+        function showPhoto(index) {
+            if (!currentStore || !currentStore.photos[index]) return;
+            document.getElementById("modalImage").src = currentStore.photos[index];
+            document.getElementById("imageModal").style.display = "flex";
+        }
+
+        function deleteStorePhoto(index) {
+            if (!currentStore || !currentStore.photos[index]) return;
+            if (confirm("确定删除这张照片吗？")) {
+                currentStore.photos.splice(index, 1);
+                updateStore();
+                renderPhotos();
+                alert("照片删除成功！");
+            }
+        }
+
+        function renderPhotos() {
+            if (!currentStore) return;
+            const gallery = document.getElementById("photoGallery");
+            gallery.innerHTML = currentStore.photos.length ? currentStore.photos.map((photo, index) => `
+                <div class="image-item" onclick="showPhoto(${index})">
+                    <img src="${photo}" alt="门店照片">
+                    <button class="delete-image-btn" onclick="deleteStorePhoto(${index}); event.stopPropagation()">删除</button>
+                </div>
+            `).join("") : "<p>暂无门店照片</p>";
+        }
+
+        function renderPriceLevel() {
+            if (!currentStore) return;
+            document.getElementById("priceLevelText").textContent = currentStore.priceLevel || "未设置";
+        }
+
+        function editPriceLevel() {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const form = document.getElementById("priceLevelForm");
+            form.style.display = form.style.display === "flex" ? "none" : "flex";
+            document.getElementById("priceLevelSelect").value = currentStore.priceLevel || "Loose";
+        }
+
+        function savePriceLevel() {
+            if (!currentStore) return;
+            currentStore.priceLevel = document.getElementById("priceLevelSelect").value;
+            updateStore();
+            renderPriceLevel();
+            document.getElementById("priceLevelForm").style.display = "none";
+            alert("价格级别更新成功！");
+        }
+
+        function deletePriceLevel() {
+            if (!currentStore || !currentStore.priceLevel) return alert("无价格级别可删除！");
+            if (confirm("确定删除价格级别吗？")) {
+                currentStore.priceLevel = null;
+                updateStore();
+                renderPriceLevel();
+                alert("价格级别删除成功！");
+            }
+        }
+
+        function toggleSalesAmountUpdate() {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const form = document.getElementById("salesAmountUpdateForm");
+            form.style.display = form.style.display === "flex" ? "none" : "flex";
+            document.getElementById("newSalesAmount").value = currentStore.salesAmount || 0;
+        }
+
+        function saveSalesAmount() {
+            if (!currentStore) return;
+            currentStore.salesAmount = parseFloat(document.getElementById("newSalesAmount").value) || 0;
+            updateStore();
+            document.getElementById("salesAmount").textContent = currentStore.salesAmount;
+            document.getElementById("salesAmountUpdateForm").style.display = "none";
+            alert("销售金额更新成功！");
+        }
+
+        function searchTiles() {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const query = document.getElementById("tileSearch").value.trim().toLowerCase();
+            const results = tiles.filter(tile =>
+                (tile.size && tile.size.toLowerCase().includes(query)) ||
+                (tile.itemCode && tile.itemCode.toLowerCase().includes(query)) ||
+                (tile.itemName && tile.itemName.toLowerCase().includes(query)) ||
+                (tile.description && tile.description.toLowerCase().includes(query))
+            );
+            const tbody = document.getElementById("tileTableBody");
+            tbody.innerHTML = results.length ? results.map(tile => `
+                <tr>
+                    <td>${tile.size || ''}</td>
+                    <td>${tile.itemCode || ''}</td>
+                    <td>${tile.itemName || ''}</td>
+                    <td>${tile.description || ''}</td>
+                    <td class="checkbox-cell"><input type="checkbox" name="tileCheck" value="${tile.itemCode}"></td>
+                </tr>
+            `).join("") : "<tr><td colspan='5'>未找到瓷砖</td></tr>";
+        }
+
+        function submitTiles() {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const checkedTiles = Array.from(document.querySelectorAll("input[name='tileCheck']:checked"))
+                .map(cb => tiles.find(t => t.itemCode === cb.value))
+                .map(tile => ({
+                    itemName: tile.itemName,
+                    itemCode: tile.itemCode,
+                    placedTime: new Date().toISOString().split("T")[0],
+                    size: tile.size
+                }));
+            if (checkedTiles.length === 0) return alert("请至少勾选一个瓷砖！");
+            const existingCodes = new Set(currentStore.tiles.map(t => t.itemCode));
+            const duplicates = checkedTiles.filter(t => existingCodes.has(t.itemCode));
+            if (duplicates.length) return alert(`以下代码已存在：${duplicates.map(t => t.itemCode).join(", ")}`);
+            currentStore.tiles.push(...checkedTiles);
+            updateStore();
+            renderPlacedTiles();
+            renderMissingTiles();
+            alert(`成功提交 ${checkedTiles.length} 个瓷砖！`);
+            searchTiles();
+        }
+
+        function populateTileDropdown() {
+            if (!currentStore) return;
+            const tileDropdown = document.getElementById("sampleTileName");
+            tileDropdown.innerHTML = '<option value="">请选择瓷砖名称</option>' + tiles.map(tile => `<option value="${tile.itemCode}">${tile.itemName}</option>`).join("");
+        }
+
+        function updateTileCode() {
+            const tileDropdown = document.getElementById("sampleTileName");
+            const tileCodeInput = document.getElementById("sampleTileCode");
+            const selectedTile = tiles.find(tile => tile.itemCode === tileDropdown.value);
+            tileCodeInput.value = selectedTile ? selectedTile.itemCode : "";
+        }
+
+        function toggleSampleForm(mode, index = -1) {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const form = document.getElementById("sampleForm");
+            const submitBtn = document.getElementById("sampleFormSubmitBtn");
+            form.style.display = form.style.display === "flex" ? "none" : "flex";
+            if (form.style.display === "flex") {
+                const tileDropdown = document.getElementById("sampleTileName");
+                const tileCodeInput = document.getElementById("sampleTileCode");
+                const placedTimeInput = document.getElementById("samplePlacedTime");
+                if (mode === "add") {
+                    editingSampleIndex = -1;
+                    submitBtn.textContent = "保存";
+                    tileDropdown.value = "";
+                    tileCodeInput.value = "";
+                    placedTimeInput.value = new Date().toISOString().split("T")[0];
+                } else if (mode === "edit" && index >= 0) {
+                    editingSampleIndex = index;
+                    submitBtn.textContent = "更新";
+                    const sample = currentStore.tiles[index];
+                    tileDropdown.value = sample.itemCode;
+                    tileCodeInput.value = sample.itemCode;
+                    placedTimeInput.value = sample.placedTime;
+                }
+            }
+        }
+
+        function saveSample() {
+            if (!currentStore) return;
+            const tileDropdown = document.getElementById("sampleTileName");
+            const selectedTile = tiles.find(tile => tile.itemCode === tileDropdown.value);
+            const placedTime = document.getElementById("samplePlacedTime").value;
+            if (!selectedTile || !placedTime) return alert("请填写所有字段！");
+            const existingCodes = currentStore.tiles.map(t => t.itemCode);
+            if (editingSampleIndex === -1 && existingCodes.includes(selectedTile.itemCode)) return alert("该代码已存在！");
+            const sample = { itemName: selectedTile.itemName, itemCode: selectedTile.itemCode, placedTime, size: selectedTile.size };
+            if (editingSampleIndex === -1) {
+                currentStore.tiles.push(sample);
+            } else {
+                currentStore.tiles[editingSampleIndex] = sample;
+            }
+            updateStore();
+            renderPlacedTiles();
+            renderMissingTiles();
+            toggleSampleForm();
+            alert(`样品 ${sample.itemName} ${editingSampleIndex === -1 ? "添加" : "更新"}成功！`);
+        }
+
+        function deleteSelectedSamples() {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const checkedSamples = Array.from(document.querySelectorAll("input[name='sampleCheck']:checked"));
+            if (checkedSamples.length === 0) return alert("请至少选择一个样品！");
+            if (confirm(`确定删除 ${checkedSamples.length} 个样品吗？`)) {
+                const indices = checkedSamples.map(cb => parseInt(cb.value)).sort((a, b) => b - a);
+                indices.forEach(index => currentStore.tiles.splice(index, 1));
+                updateStore();
+                renderPlacedTiles();
+                renderMissingTiles();
+                alert("样品删除成功！");
+            }
+        }
+
+        function renderPlacedTiles() {
+            if (!currentStore) return;
+            const tbody = document.getElementById("placedTileTableBody");
+            tbody.innerHTML = "";
+            const sizeGroups = {};
+            currentStore.tiles.forEach((tile, index) => {
+                if (!sizeGroups[tile.size]) sizeGroups[tile.size] = [];
+                sizeGroups[tile.size].push({ itemCode: tile.itemCode, index });
+            });
+            for (let size in sizeGroups) {
+                const codes = sizeGroups[size];
+                codes.forEach((codeObj, idx) => {
+                    let row = `<tr${idx === 0 ? ' class="size-row"' : ''}>`;
+                    if (idx === 0) row += `<td rowspan="${codes.length}">${size}</td>`;
+                    row += `<td>${codeObj.itemCode}</td>
+                            <td><input type="checkbox" name="sampleCheck" value="${codeObj.index}"></td>
+                            <td>
+                                <button class="edit-btn" onclick="toggleSampleForm('edit', ${codeObj.index})">编辑</button>
+                                <button class="delete-btn" onclick="deletePlacedTile(${codeObj.index})">删除</button>
+                            </td></tr>`;
+                    tbody.innerHTML += row;
+                });
+            }
+            if (currentStore.tiles.length === 0) tbody.innerHTML = "<tr><td colspan='4'>暂无样品</td></tr>";
+        }
+
+        function deletePlacedTile(index) {
+            if (!currentStore || !confirm("确定删除该样品吗？")) return;
+            currentStore.tiles.splice(index, 1);
+            updateStore();
+            renderPlacedTiles();
+            renderMissingTiles();
+            alert("样品删除成功！");
+        }
+
+        function renderMissingTiles() {
+            if (!currentStore) return;
+            const tbody = document.getElementById("missingTileTableBody");
+            tbody.innerHTML = "";
+            const existingCodes = new Set(currentStore.tiles.map(t => t.itemCode));
+            const missingTiles = tiles.filter(t => !existingCodes.has(t.itemCode));
+            if (missingTiles.length) {
+                const sizeGroups = {};
+                missingTiles.forEach(tile => {
+                    if (!sizeGroups[tile.size]) sizeGroups[tile.size] = [];
+                    sizeGroups[tile.size].push(tile);
+                });
+                for (let size in sizeGroups) {
+                    const tilesInSize = sizeGroups[size];
+                    tilesInSize.forEach((tile, idx) => {
+                        let row = `<tr${idx === 0 ? ' class="size-row"' : ' class="missing-row"'}>`;
+                        if (idx === 0) row += `<td rowspan="${tilesInSize.length}">${size}</td>`;
+                        row += `<td>${tile.itemCode}</td><td>${tile.itemName}</td><td>${tile.description}</td></tr>`;
+                        tbody.innerHTML += row;
+                    });
+                }
+            } else {
+                tbody.innerHTML = "<tr><td colspan='4'>该门店样品齐全</td></tr>";
+            }
+        }
+
+        function exportExistingSamples() {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const data = currentStore.tiles.map(tile => ({
+                "尺寸": tile.size,
+                "代码": tile.itemCode,
+                "名称": tile.itemName,
+                "放置时间": tile.placedTime
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "已有样品");
+            XLSX.writeFile(wb, `${currentStore.name}_已有样品_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        function exportMissingSamples() {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const existingCodes = new Set(currentStore.tiles.map(t => t.itemCode));
+            const missingTiles = tiles.filter(t => !existingCodes.has(t.itemCode));
+            const data = missingTiles.map(tile => ({
+                "尺寸": tile.size,
+                "代码": tile.itemCode,
+                "名称": tile.itemName,
+                "描述": tile.description
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "欠缺样品");
+            XLSX.writeFile(wb, `${currentStore.name}_欠缺样品_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        function toggleFollowUpUpdate() {
+            if (!currentStore) return alert("请先选择一个门店！");
+            const form = document.getElementById("editFollowUpForm");
+            form.style.display = form.style.display === "flex" ? "none" : "flex";
+            editingIndex = -1;
+            document.getElementById("editTask").value = "";
+            document.getElementById("editDeadline").value = "";
+            document.getElementById("followUpImage").value = "";
+        }
+
+        function editFollowUp(index) {
+            if (!currentStore) return;
+            const followUp = currentStore.followUps[index];
+            document.getElementById("editTask").value = followUp.task;
+            document.getElementById("editDeadline").value = followUp.deadline;
+            document.getElementById("followUpImage").value = "";
+            document.getElementById("editFollowUpForm").style.display = "flex";
+            editingIndex = index;
+        }
+
+        function saveFollowUp() {
+            if (!currentStore) return;
+            const task = document.getElementById("editTask").value.trim();
+            const deadline = document.getElementById("editDeadline").value;
+            const imageFile = document.getElementById("followUpImage").files[0];
+            if (!task || !deadline) return alert("请填写所有字段！");
+            const followUp = { task, deadline };
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    followUp.imageData = e.target.result;
+                    saveFollowUpToStore(followUp);
+                };
+                reader.readAsDataURL(imageFile);
+            } else {
+                if (editingIndex !== -1) followUp.imageData = currentStore.followUps[editingIndex].imageData;
+                saveFollowUpToStore(followUp);
+            }
+        }
+
+        function saveFollowUpToStore(followUp) {
+            if (editingIndex === -1) {
+                currentStore.followUps.push(followUp);
+            } else {
+                currentStore.followUps[editingIndex] = followUp;
+            }
+            updateStore();
+            renderFollowUps();
+            document.getElementById("editFollowUpForm").style.display = "none";
+            editingIndex = -1;
+            alert("备注保存成功！");
+        }
+
+        function deleteFollowUp(index) {
+            if (!currentStore || !confirm("确定删除该备注吗？")) return;
+            currentStore.followUps.splice(index, 1);
+            updateStore();
+            renderFollowUps();
+            alert("备注删除成功！");
+        }
+
+        function renderFollowUps() {
+            if (!currentStore) return;
+            const tbody = document.getElementById("followUpTableBody");
+            tbody.innerHTML = currentStore.followUps.map((followUp, index) => `
+                <tr>
+                    <td>${followUp.task}</td>
+                    <td>${followUp.deadline}</td>
+                    <td>${followUp.imageData ? `<button class="upload-btn" onclick="showImage(${index}, 'followUp')">查看图片</button>` : "无图片"}</td>
+                    <td>
+                        <button class="edit-btn" onclick="editFollowUp(${index})">修改</button>
+                        <button class="delete-btn" onclick="deleteFollowUp(${index})">删除</button>
+                    </td>
+                </tr>
+            `).join("");
+        }
+
+        function showImage(index, type = 'store') {
+            if (!currentStore) return;
+            const image = type === 'store' ? currentStore.images[index] : (type === 'photo' ? currentStore.photos[index] : currentStore.followUps[index].imageData);
+            if (image) {
+                document.getElementById("modalImage").src = image;
+                document.getElementById("imageModal").style.display = "flex";
+            }
+        }
+
+        function closeModal() {
+            document.getElementById("imageModal").style.display = "none";
+            document.getElementById("modalImage").src = "";
+        }
+
+        function updateStore() {
+            if (!currentStore) return;
+            const storeIndex = stores.findIndex(s => s.id === currentStore.id);
+            stores[storeIndex] = currentStore;
+            localStorage.setItem("stores", JSON.stringify(stores));
+        }
+
+        function backupData() {
+            const backupData = { stores, tiles };
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            alert("数据备份成功！");
+        }
+
+        function restoreData(event) {
+            const file = event.target.files[0];
+            if (!file || !file.name.endsWith(".json")) return alert("请上传有效的 JSON 文件！");
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backupData = JSON.parse(e.target.result);
+                    if (!backupData.stores || !backupData.tiles) throw new Error("备份文件格式不正确");
+                    stores = backupData.stores;
+                    tiles = backupData.tiles.map(tile => ({
+                        size: tile["SIZE (MM)"] || tile.size || "",
+                        itemCode: tile["ITEM CODE"] || tile.itemCode || "",
+                        itemName: tile["ITEM NAME"] || tile.itemName || "",
+                        description: tile["DESCRIPTION"] || tile.description || ""
+                    }));
+                    localStorage.setItem("stores", JSON.stringify(stores));
+                    localStorage.setItem("tiles", JSON.stringify(tiles));
+                    currentStore = null;
+                    renderStoreTable();
+                    populateSalesmanFilter();
+                    showSection("home");
+                    alert("数据恢复成功！");
+                } catch (err) {
+                    alert("恢复失败：" + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = "";
+        }
+
+        function showSection(section) {
+            document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
+            const targetSection = document.getElementById(`${section}Section`);
+            targetSection.classList.remove("hidden");
+
+            if (section === "memo") {
+                document.getElementById("memoStoreName").textContent = currentStore ? currentStore.name : "未选择门店";
+                renderMemos();
+            } else if (section === "storeSearch") {
+                populateSalesmanFilter();
+                renderStoreTable();
+            } else if (section === "storeInfo" && currentStore) {
+                document.getElementById("storeNameHeader").textContent = currentStore.name || "未知门店";
+                document.getElementById("storeName").textContent = currentStore.name || "未知门店";
+                document.getElementById("salesAmount").textContent = currentStore.salesAmount || 0;
+                renderPhoneNumber();
+                renderContactPerson();
+                renderPriceLevel();
+                renderPhotos();
+            } else if (section === "tileInventory" && currentStore) {
+                document.getElementById("tileInventoryStoreName").textContent = currentStore.name || "未知门店";
+                searchTiles();
+            } else if (section === "salesFollowUp" && currentStore) {
+                document.getElementById("salesFollowUpStoreName").textContent = currentStore.name || "未知门店";
+                renderFollowUps();
+            } else if (section === "existingSamples" && currentStore) {
+                document.getElementById("existingSamplesStoreName").textContent = currentStore.name || "未知门店";
+                populateTileDropdown();
+                renderPlacedTiles();
+            } else if (section === "missingSamples" && currentStore) {
+                document.getElementById("missingSamplesStoreName").textContent = currentStore.name || "未知门店";
+                renderMissingTiles();
+            } else if (["storeInfo", "tileInventory", "salesFollowUp", "existingSamples", "missingSamples", "memo"].includes(section) && !currentStore) {
+                targetSection.innerHTML = "<p>请先在‘门店搜索’中选择一个门店</p>";
+            }
+        }
+
+        window.onload = function() {
+            showSection("home");
+        };
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'921c2e499bac678b',t:'MTc0MjIxMTI2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
